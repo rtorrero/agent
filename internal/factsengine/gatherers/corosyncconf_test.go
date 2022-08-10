@@ -12,6 +12,7 @@ import (
 
 type CorosyncConfTestSuite struct {
 	suite.Suite
+	fileSystem afero.Fs
 }
 
 func TestCorosyncConfTestSuite(t *testing.T) {
@@ -19,9 +20,9 @@ func TestCorosyncConfTestSuite(t *testing.T) {
 }
 
 func (suite *CorosyncConfTestSuite) SetupTest() {
-	fileSystem = afero.NewMemMapFs()
+	suite.fileSystem = afero.NewMemMapFs()
 
-	err := fileSystem.MkdirAll("/etc/corosync", 0644)
+	err := suite.fileSystem.MkdirAll("/etc/corosync", 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -30,9 +31,9 @@ func (suite *CorosyncConfTestSuite) SetupTest() {
 func (suite *CorosyncConfTestSuite) TestCorosyncConfBasic() {
 	testFile, _ := os.Open("../../../test/fixtures/gatherers/corosync.conf.basic")
 	confFile, _ := ioutil.ReadAll(testFile)
-	err := afero.WriteFile(fileSystem, "/etc/corosync/corosync.conf", confFile, 0644)
+	err := afero.WriteFile(suite.fileSystem, "/etc/corosync/corosync.conf", confFile, 0644)
 	assert.NoError(suite.T(), err)
-	c := NewCorosyncConfGatherer()
+	c := NewCorosyncConfGatherer(suite.fileSystem)
 
 	factRequests := []FactRequest{
 		{
@@ -112,7 +113,7 @@ func (suite *CorosyncConfTestSuite) TestCorosyncConfBasic() {
 }
 
 func (suite *CorosyncConfTestSuite) TestCorosyncConfFileNotExists() {
-	c := NewCorosyncConfGatherer()
+	c := NewCorosyncConfGatherer(suite.fileSystem)
 
 	factRequests := []FactRequest{
 		{
@@ -130,9 +131,9 @@ func (suite *CorosyncConfTestSuite) TestCorosyncConfFileNotExists() {
 func (suite *CorosyncConfTestSuite) TestCorosyncConfInvalid() {
 	testFile, _ := os.Open("../../../test/fixtures/gatherers/corosync.conf.invalid")
 	confFile, _ := ioutil.ReadAll(testFile)
-	err := afero.WriteFile(fileSystem, "/etc/corosync/corosync.conf", confFile, 0644)
+	err := afero.WriteFile(suite.fileSystem, "/etc/corosync/corosync.conf", confFile, 0644)
 	assert.NoError(suite.T(), err)
-	c := NewCorosyncConfGatherer()
+	c := NewCorosyncConfGatherer(suite.fileSystem)
 
 	factRequests := []FactRequest{
 		{

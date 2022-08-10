@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/trento-project/agent/internal/factsengine/adapters"
 	"github.com/trento-project/agent/internal/factsengine/gatherers"
 	"golang.org/x/sync/errgroup"
@@ -21,17 +22,19 @@ type FactsEngine struct {
 }
 
 func NewFactsEngine(agentID, factsEngineService string) *FactsEngine {
+	fileSystem := afero.NewOsFs()
 	return &FactsEngine{
 		agentID:             agentID,
 		factsEngineService:  factsEngineService,
 		factsServiceAdapter: nil,
 		factGatherers: map[string]gatherers.FactGatherer{
-			gatherers.CorosyncFactKey:            gatherers.NewCorosyncConfGatherer(),
+			gatherers.CorosyncFactKey:            gatherers.NewCorosyncConfGatherer(fileSystem),
 			gatherers.CorosyncCmapCtlFactKey:     gatherers.NewCorosyncCmapctlGatherer(),
 			gatherers.PackageVersionGathererName: gatherers.NewPackageVersionGatherer(),
 			gatherers.CrmMonGathererName:         gatherers.NewCrmMonGatherer(),
 			gatherers.CibAdminGathererName:       gatherers.NewCibAdminGatherer(),
 			gatherers.SystemDGathererName:        gatherers.NewSystemDGatherer(),
+			gatherers.HostsFileGathererName:      gatherers.NewHostsFileGatherer(fileSystem),
 		},
 		pluginLoaders: NewPluginLoaders(),
 	}
