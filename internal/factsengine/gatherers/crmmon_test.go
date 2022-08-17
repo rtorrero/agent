@@ -12,6 +12,7 @@ import (
 
 type CrmMonTestSuite struct {
 	suite.Suite
+	executor     *mocks.CommandExecutor
 	crmMonOutput []byte
 }
 
@@ -20,6 +21,7 @@ func TestCrmMonTestSuite(t *testing.T) {
 }
 
 func (suite *CrmMonTestSuite) SetupSuite() {
+	suite.executor = new(mocks.CommandExecutor)
 	lFile, _ := os.Open("../../../test/fixtures/gatherers/crmmon.xml")
 	content, _ := ioutil.ReadAll(lFile)
 
@@ -27,13 +29,11 @@ func (suite *CrmMonTestSuite) SetupSuite() {
 }
 
 func (suite *CrmMonTestSuite) TestCrmMonGather() {
-	mockExecutor := new(mocks.CommandExecutor)
-
-	mockExecutor.On("Exec", "crm_mon", "--output-as", "xml").Return(
+	suite.executor.On("Exec", "crm_mon", "--output-as", "xml").Return(
 		suite.crmMonOutput, nil)
 
 	p := &CrmMonGatherer{
-		executor: mockExecutor,
+		executor: suite.executor,
 	}
 
 	factRequests := []FactRequest{
@@ -71,13 +71,10 @@ func (suite *CrmMonTestSuite) TestCrmMonGather() {
 }
 
 func (suite *CrmMonTestSuite) TestCrmMonGatherCmdNotFound() {
-	mockExecutor := new(mocks.CommandExecutor)
-
-	mockExecutor.On("Exec", "crm_mon", "--output-as", "xml").Return(
+	suite.executor.On("Exec", "crm_mon", "--output-as", "xml").Return(
 		suite.crmMonOutput, errors.New("crm_mon not found"))
-
 	p := &CrmMonGatherer{
-		executor: mockExecutor,
+		executor: suite.executor,
 	}
 
 	factRequests := []FactRequest{
