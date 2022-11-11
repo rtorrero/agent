@@ -17,32 +17,34 @@ const (
 	CorosyncConfPath = "/etc/corosync/corosync.conf"
 )
 
-// FIXME proper testing and DI
 var (
-	fileSystem = afero.NewOsFs() //nolint
-
 	sectionStartPatternCompiled = regexp.MustCompile(`^\s*(\w+)\s*{.*`)
 	sectionEndPatternCompiled   = regexp.MustCompile(`^\s*}.*`)
 	valuePatternCompiled        = regexp.MustCompile(`^\s*(\w+)\s*:\s*(\S+).*`)
 )
 
 type CorosyncConfGatherer struct {
+	fileSystem afero.Fs
 }
 
-func NewCorosyncConfGatherer() *CorosyncConfGatherer {
-	return &CorosyncConfGatherer{}
+func NewCorosyncConfGatherer(fileSystem afero.Fs) *CorosyncConfGatherer {
+	return &CorosyncConfGatherer{fileSystem: fileSystem}
 }
 
 func (s *CorosyncConfGatherer) Gather(factsRequests []FactRequest) ([]Fact, error) {
 	facts := []Fact{}
 	log.Infof("Starting corosync.conf file facts gathering process")
 
-	corosyncConfile, err := readCorosyncConfFileByLines(CorosyncConfPath)
+	corosyncConfFile, err := s.fileSystem.Open(CorosyncConfPath)
 	if err != nil {
-		return facts, err
+		return nil, errors.Wrap(err, "could not open corosync.conf file")
 	}
 
-	corosycnMap, err := corosyncConfToMap(corosyncConfile)
+	defer corosyncConfFile.Close()
+
+	corosyncConfLines := readCorosyncConfFileByLines(corosyncConfFile)
+
+	corosycnMap, err := corosyncConfToMap(corosyncConfLines)
 	if err != nil {
 		return facts, err
 	}
@@ -56,15 +58,8 @@ func (s *CorosyncConfGatherer) Gather(factsRequests []FactRequest) ([]Fact, erro
 	return facts, nil
 }
 
-func readCorosyncConfFileByLines(filePath string) ([]string, error) {
-	corosyncConfFile, err := fileSystem.Open(filePath)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not open corosync.conf file")
-	}
-
-	defer corosyncConfFile.Close()
-
-	fileScanner := bufio.NewScanner(corosyncConfFile)
+func readCorosyncConfFileByLines(file afero.File) []string {
+	fileScanner := bufio.NewScanner(file)
 	fileScanner.Split(bufio.ScanLines)
 	var fileLines []string
 
@@ -72,7 +67,7 @@ func readCorosyncConfFileByLines(filePath string) ([]string, error) {
 		fileLines = append(fileLines, fileScanner.Text())
 	}
 
-	return fileLines, nil
+	return fileLines
 }
 
 func corosyncConfToMap(lines []string) (map[string]interface{}, error) {

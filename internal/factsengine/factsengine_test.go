@@ -325,10 +325,8 @@ func (suite *FactsEngineTestSuite) TestFactsEngineGetGatherer() {
 	engine := NewFactsEngine("", "")
 	g, err := engine.GetGatherer("corosync.conf")
 
-	expectedGatherer := &gatherers.CorosyncConfGatherer{}
-
 	suite.NoError(err)
-	suite.Equal(expectedGatherer, g)
+	suite.IsType(&gatherers.CorosyncConfGatherer{}, g)
 }
 
 func (suite *FactsEngineTestSuite) TestFactsEngineGetGathererNotFound() {
@@ -359,7 +357,7 @@ func (suite *FactsEngineTestSuite) TestFactsEngineGetGatherersListNative() {
 
 	gatherers := engine.GetGatherersList()
 
-	expectedGatherers := []string{"corosync.conf", "corosync-cmapctl", "package_version", "crm_mon", "cibadmin", "systemd"}
+	expectedGatherers := []string{"corosync.conf", "corosync-cmapctl", "package_version", "crm_mon", "cibadmin", "systemd", "hosts"}
 
 	suite.ElementsMatch(expectedGatherers, gatherers)
 }
@@ -409,7 +407,7 @@ func (suite *FactsEngineTestSuite) TestFactsEngineLoadPlugins() {
 
 	engine := &FactsEngine{ // nolint
 		factGatherers: map[string]gatherers.FactGatherer{
-			gatherers.CorosyncFactKey: gatherers.NewCorosyncConfGatherer(),
+			gatherers.CorosyncCmapCtlFactKey: gatherers.NewCorosyncCmapctlGatherer(),
 		},
 		pluginLoaders: PluginLoaders{
 			"rpc": &testPluginLoader{},
@@ -419,11 +417,9 @@ func (suite *FactsEngineTestSuite) TestFactsEngineLoadPlugins() {
 	err = engine.LoadPlugins(pluginsFolder)
 
 	pluginName := path.Base(tmpFile.Name())
-	expectedGatherers := map[string]gatherers.FactGatherer{
-		"corosync.conf": &gatherers.CorosyncConfGatherer{},
-		pluginName:      NewDummyGatherer1(),
-	}
+
+	suite.IsType(&DummyGatherer1{}, engine.factGatherers[pluginName])
+	suite.IsType(&gatherers.CorosyncCmapctlGatherer{}, engine.factGatherers[gatherers.CorosyncCmapCtlFactKey])
 
 	suite.NoError(err)
-	suite.Equal(expectedGatherers, engine.factGatherers)
 }

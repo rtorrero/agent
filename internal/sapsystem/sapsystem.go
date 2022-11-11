@@ -369,9 +369,9 @@ func getUniqueIDDiagnostics(fs afero.Fs) (string, error) {
 }
 
 // The content type of the databases.lst looks like
-//# DATABASE:CONTAINER:USER:GROUP:USERID:GROUPID:HOST:SQLPORT:ACTIVE
-//PRD::::::hana02:30015:yes
-//DEV::::::hana02:30044:yes
+// # DATABASE:CONTAINER:USER:GROUP:USERID:GROUPID:HOST:SQLPORT:ACTIVE
+// PRD::::::hana02:30015:yes
+// DEV::::::hana02:30044:yes
 func getDatabases(fs afero.Fs, sid string) ([]*DatabaseData, error) {
 	databasesListPath := fmt.Sprintf(
 		"/usr/sap/%s/SYS/global/hdb/mdc/databases.lst", sid)
