@@ -93,39 +93,28 @@ func readCmapCtlOutputByLines(data []byte) []string {
 }
 
 func cmapCtlOutputToMap(lines []string) (*entities.FactValueMap, error) {
-	//var corosyncCmapCtlMap = make(map[string]entities.FactValue)
-
-	var corosyncCmapCtlMap *entities.FactValueMap
+	var corosyncCmapCtlMap entities.FactValueMap
 
 	for _, line := range lines {
 		keyValue := strings.Split(line, " = ")
 		keys := strings.Split(keyValue[0], ".")
-		corosyncCmapCtlMap, _ = parseValue(keys, keyValue[1])
+		corosyncCmapCtlMap.Value = parseValue(keys, keyValue[1])
 	}
 
-	return corosyncCmapCtlMap, nil
+	return &corosyncCmapCtlMap, nil
 }
 
-func parseValue(keys []string, value string) (*entities.FactValueMap, error) {
+func parseValue(keys []string, value string) map[string]entities.FactValue {
 	var outputMap = make(map[string]entities.FactValue)
-	//var resultMap entities.FactValueMap
 
 	if len(keys) < 2 {
-		innerMostKey := strings.Split(keys[len(keys)-1], " ")[0]
+		innerMostKey := strings.Split(keys[0], " ")[0]
 		outputMap = make(map[string]entities.FactValue)
 		outputMap[innerMostKey] = entities.ParseStringToFactValue(value)
-
-		//resultMap.Value = outputMap
 	} else {
 		reducedKeys := keys[1:]
-		//var cacota *entities.FactValueMap
-		// outputMap, _ = parseValue(reducedKeys, value)
-		// resultMap.Value = cacota.Value
-
-		//resultMap.Value[keys[0]], _ = parseValue(reducedKeys, value)
-		outputMap[keys[0]], _ = parseValue(reducedKeys, value)
+		outputMap[keys[0]] = &entities.FactValueMap{Value: parseValue(reducedKeys, value)}
 	}
 
-	//return &resultMap, nil
-	return &entities.FactValueMap{Value: outputMap}, nil
+	return outputMap
 }
