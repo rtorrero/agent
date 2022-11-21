@@ -98,46 +98,34 @@ func cmapCtlOutputToMap(lines []string) (*entities.FactValueMap, error) {
 	var corosyncCmapCtlMap *entities.FactValueMap
 
 	for _, line := range lines {
-		keys := strings.Split(line, ".")
-		corosyncCmapCtlMap, _ = parseValue(keys)
+		keyValue := strings.Split(line, " = ")
+		keys := strings.Split(keyValue[0], ".")
+		corosyncCmapCtlMap, _ = parseValue(keys, keyValue[1])
 	}
+
 	return corosyncCmapCtlMap, nil
-
-	// for _, line := range lines {
-	// 	keys := strings.Split(line, ".")
-	// 	var p *FactValue
-	// 	if len(keys) > 0 {
-	// 		corosyncCmapCtlMap[keys[0]] =
-	// 		p = &corosyncCmapCtlMap[keys[0]]
-	// 	}
-	// 	for i, key := range keys {
-	// 		corosyncCmapCtlMap[] :=
-	// 		if i >= len(keys) {
-
-	// 		}
-	// 	}
-	// }
-
 }
 
-func parseValue(keys []string) (*entities.FactValueMap, error) {
+func parseValue(keys []string, value string) (*entities.FactValueMap, error) {
 	var outputMap = make(map[string]entities.FactValue)
-	var resultMap entities.FactValueMap
+	//var resultMap entities.FactValueMap
 
-	if len(keys) < 3 {
-		innerMostKeyValue := strings.Split(keys[len(keys)-1], " = ")
-		innerMostKey := strings.Split(innerMostKeyValue[0], " ")[0]
+	if len(keys) < 2 {
+		innerMostKey := strings.Split(keys[len(keys)-1], " ")[0]
 		outputMap = make(map[string]entities.FactValue)
-		outputMap[innerMostKey] = entities.ParseStringToFactValue(innerMostKeyValue[1])
+		outputMap[innerMostKey] = entities.ParseStringToFactValue(value)
 
-		resultMap.Value = outputMap
+		//resultMap.Value = outputMap
 	} else {
-		//factValueMap.Value = make(map[string]entities.FactValue)
 		reducedKeys := keys[1:]
-		var cacota *entities.FactValueMap
-		cacota, _ = parseValue(reducedKeys)
-		resultMap.Value = cacota.Value
+		//var cacota *entities.FactValueMap
+		// outputMap, _ = parseValue(reducedKeys, value)
+		// resultMap.Value = cacota.Value
+
+		//resultMap.Value[keys[0]], _ = parseValue(reducedKeys, value)
+		outputMap[keys[0]], _ = parseValue(reducedKeys, value)
 	}
 
-	return &resultMap, nil
+	//return &resultMap, nil
+	return &entities.FactValueMap{Value: outputMap}, nil
 }
