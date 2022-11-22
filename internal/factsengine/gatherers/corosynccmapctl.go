@@ -98,23 +98,29 @@ func cmapCtlOutputToMap(lines []string) (*entities.FactValueMap, error) {
 	for _, line := range lines {
 		keyValue := strings.Split(line, " = ")
 		keys := strings.Split(keyValue[0], ".")
-		corosyncCmapCtlMap.Value = parseValue(keys, keyValue[1])
+		parseValue(&corosyncCmapCtlMap, keys, keyValue[1])
+		//corosyncCmapCtlMap.Value = parseValue(keys, keyValue[1])
 	}
 
 	return &corosyncCmapCtlMap, nil
 }
 
-func parseValue(keys []string, value string) map[string]entities.FactValue {
+func parseValue(fvm *entities.FactValueMap, keys []string, value string) {
 	var outputMap = make(map[string]entities.FactValue)
+	//var fvmChild *entities.FactValueMap
 
 	if len(keys) < 2 {
 		innerMostKey := strings.Split(keys[0], " ")[0]
 		outputMap = make(map[string]entities.FactValue)
 		outputMap[innerMostKey] = entities.ParseStringToFactValue(value)
+		fvm.Value = outputMap
 	} else {
 		reducedKeys := keys[1:]
-		outputMap[keys[0]] = &entities.FactValueMap{Value: parseValue(reducedKeys, value)}
+		fvmChild := entities.FactValueMap{}
+		fvm.Value = &entities.FactValue{""Value: fvmChild}
+		parseValue(fvmChild, reducedKeys, value)
+		//outputMap[keys[0]] = &entities.FactValueMap{Value: parseValue(fvmChild, reducedKeys, value)}
 	}
 
-	return outputMap
+	return
 }
