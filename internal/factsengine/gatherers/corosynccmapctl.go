@@ -98,29 +98,90 @@ func cmapCtlOutputToMap(lines []string) (*entities.FactValueMap, error) {
 	for _, line := range lines {
 		keyValue := strings.Split(line, " = ")
 		keys := strings.Split(keyValue[0], ".")
-		parseValue(&corosyncCmapCtlMap, keys, keyValue[1])
+		parseValue(&corosyncCmapCtlMap.Value, keys, keyValue[1])
 		//corosyncCmapCtlMap.Value = parseValue(keys, keyValue[1])
 	}
 
 	return &corosyncCmapCtlMap, nil
 }
 
-func parseValue(fvm *entities.FactValueMap, keys []string, value string) {
-	var outputMap = make(map[string]entities.FactValue)
-	//var fvmChild *entities.FactValueMap
+func cleanKey(key string) string {
+	return strings.Split(key, " ")[0]
+}
 
-	if len(keys) < 2 {
-		innerMostKey := strings.Split(keys[0], " ")[0]
-		outputMap = make(map[string]entities.FactValue)
-		outputMap[innerMostKey] = entities.ParseStringToFactValue(value)
-		fvm.Value = outputMap
-	} else {
-		reducedKeys := keys[1:]
-		fvmChild := entities.FactValueMap{}
-		fvm.Value = &entities.FactValue{""Value: fvmChild}
-		parseValue(fvmChild, reducedKeys, value)
-		//outputMap[keys[0]] = &entities.FactValueMap{Value: parseValue(fvmChild, reducedKeys, value)}
+func parseValue(fvm *map[string]entities.FactValue, keys []string, value string) {
+	currentKey := keys[0]
+
+	if len(keys) == 1 {
+		(*fvm)[currentKey] = entities.ParseStringToFactValue(value)
+		return
 	}
 
-	return
+	// DOES EXIST
+	if currentValue, ok := (*fvm)[currentKey]; ok {
+		var tacua2 = map[string]entities.FactValue{
+			currentKey: currentValue,
+		}
+
+		parseValue(&currentValue, keys[1:], value)
+		return
+	}
+
+	// DOES NOT EXIST
+	fvmNew := &entities.FactValueMap{}
+	(*fvm)[currentKey] = fvmNew
+	parseValue(&fvmNew.Value, keys[1:], value)
 }
+
+// func parseValue(fvm *entities.FactValueMap, keys []string, value string) {
+// 	if len(keys) == 1 {
+// 		var newMap = make(map[string]entities.FactValue)
+// 		newMap[cleanKey(keys[0])] = entities.ParseStringToFactValue(value)
+// 		fvm.Value = newMap
+// 		return
+// 	}
+// 	if _, ok := fvm.Value[keys[0]]; ok {
+// 		// EXISTS!
+// 	}
+
+// 	// DOES NOT EXIST
+// 	newFVM := &entities.FactValueMap{
+// 		Value: map[string]entities.FactValue{
+// 			keys[0]: &entities.FactValueMap{},
+// 		},
+// 	}
+// 	fvm.Value = newFVM.Value
+// 	parseValue(&fvm.Value[keys[0]], keys[1:], value)
+
+// 	// fvm.Value[keys[0]]
+
+// 	// if _, ok := fvm.Value[keys[0]]; ok {
+// 	// 	cosita := &entities.FactValue{fvm.Value[keys[0]]
+// 	// 	if fvmnew, ok := fvm.Value[keys[0]].(entities.FactValueMap); ok {
+// 	// 		parseValue(&fvm.Value[keys[0]], keys[1:], value)
+// 	// 	}
+// 	// }
+
+// 	return
+// }
+
+// func parseValue(fvm *entities.FactValueMap, keys []string, value string) {
+// 	var outputMap = make(map[string]entities.FactValue)
+// 	//var fvmChild *entities.FactValueMap
+
+// 	if len(keys) < 2 {
+// 		innerMostKey := strings.Split(keys[0], " ")[0]
+// 		outputMap = make(map[string]entities.FactValue)
+// 		outputMap[innerMostKey] = entities.ParseStringToFactValue(value)
+// 		fvm.Value = outputMap
+// 	} else {
+// 		reducedKeys := keys[1:]
+// 		var fvmChild entities.FactValue
+// 		fvm.Value = map[string]entities.FactValue{keys[0]: fvmChild}
+
+// 		parseValue(fvm.Value[keys[0]], reducedKeys, value)
+// 		//outputMap[keys[0]] = &entities.FactValueMap{Value: parseValue(fvmChild, reducedKeys, value)}
+// 	}
+
+// 	return
+// }
