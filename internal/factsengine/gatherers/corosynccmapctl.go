@@ -52,6 +52,7 @@ func (s *CorosyncCmapctlGatherer) Gather(factsRequests []entities.FactRequest) (
 
 	corosyncCmapctlMap := utils.FindMatches(corosyncCmapCtlparsingRegexp, corosyncCmapctl)
 
+	nestedMap, _ := entities.UnflattenGenericMap(corosyncCmapctlMap)
 	for _, factReq := range factsRequests {
 		var fact entities.Fact
 
