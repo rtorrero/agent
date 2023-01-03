@@ -192,3 +192,28 @@ func getValue(fact FactValue, values []string) (FactValue, error) {
 		return value, nil
 	}
 }
+
+func UnflattenGenericMap(input map[string]interface{}) (FactValueMap, error) {
+	output := FactValueMap{Value: make(map[string]FactValue)}
+	for key, value := range input {
+		keys := strings.Split(key, ".")
+		currentMap := &output
+		for _, subkey := range keys[:len(keys)-1] {
+			submap, ok := currentMap.Value[subkey]
+			if !ok {
+				submap = &FactValueMap{Value: make(map[string]FactValue)}
+				currentMap.Value[subkey] = submap
+			}
+			currentMap, ok = submap.(*FactValueMap)
+			if !ok {
+				return output, fmt.Errorf("cannot unflatten map: key %q is not a map", key)
+			}
+		}
+		factValue, err := NewFactValue(value)
+		if err != nil {
+			return output, err
+		}
+		currentMap.Value[keys[len(keys)-1]] = factValue
+	}
+	return output, nil
+}
