@@ -14,7 +14,7 @@ const (
 )
 
 // nolint:gochecknoglobals
-var whitelistedArguments = map[string]func(string) (entities.FactValue, *entities.FactGatheringError){
+var whitelistedArguments = map[string]func([]byte) (entities.FactValue, *entities.FactGatheringError){
 	"status --non-compliance-check":          gatherStatus,
 	"solution-verify": gatherSolutionVerify,
 	"solution-list":   gatherSolutionList,
@@ -45,6 +45,52 @@ var (
 	}
 
 )
+
+type SaptuneOutput struct {
+	Schema      string    `json:"$schema"`
+	PublishTime string    `json:"publish time"`
+	Argv        string    `json:"argv"`
+	Pid         int       `json:"pid"`
+	Command     string    `json:"command"`
+	ExitCode    int       `json:"exit code"`
+	Result      Result    `json:"result"`
+	Messages    []Message `json:"messages"`
+}
+
+type Result struct {
+	Services                 Services `json:"services"`
+	SystemdSystemState       string   `json:"systemd system state"`
+	TuningState              string   `json:"tuning state"`
+	Virtualization           string   `json:"virtualization"`
+	ConfiguredVersion        string   `json:"configured version"`
+	PackageVersion           string   `json:"package version"`
+	SolutionEnabled          []string `json:"Solution enabled"`
+	NotesEnabledBySolution   []string `json:"Notes enabled by Solution"`
+	SolutionApplied          []string `json:"Solution applied"`
+	NotesAppliedBySolution   []string `json:"Notes applied by Solution"`
+	NotesEnabledAdditionally []string `json:"Notes enabled additionally"`
+	NotesEnabled             []string `json:"Notes enabled"`
+	NotesApplied             []string `json:"Notes applied"`
+	Staging                  Staging  `json:"staging"`
+	RememberMessage          string   `json:"remember message"`
+}
+
+type Services struct {
+	Saptune []string `json:"saptune"`
+	Sapconf []string `json:"sapconf"`
+	Tuned   []string `json:"tuned"`
+}
+
+type Staging struct {
+	StagingEnabled  bool     `json:"staging enabled"`
+	NotesStaged     []string `json:"Notes staged"`
+	SolutionsStaged []string `json:"Solutions staged"`
+}
+
+type Message struct {
+	Priority string `json:"priority"`
+	Message  string `json:"message"`
+}
 
 type SaptuneGatherer struct {
 	executor utils.CommandExecutor
@@ -101,22 +147,31 @@ func handleArgument(
 		return nil, gatheringError
 	}
 
-	return argumentHandler(string(saptuneOutput))
+	return argumentHandler(saptuneOutput)
 }
 
-func gatherStatus(commandOutput string) (entities.FactValue, *entities.FactGatheringError) {
-	// profit?
+func gatherStatus(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
+	// var data SaptuneOutput
+	//_ := json.Unmarshal(commandOutput, &data)
+
+	//TODO
+	result := &entities.FactValueMap{}
+	return result, nil
 }
 
-func gatherSolutionVerify(commandOutput string) (entities.FactValue, *entities.FactGatheringError) {
-	// profit?
+func gatherSolutionVerify(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
+	result := &entities.FactValueMap{}
+	return result, nil
 }
-func gatherSolutionList(commandOutput string) (entities.FactValue, *entities.FactGatheringError) {
-	// profit?
+func gatherSolutionList(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
+	result := &entities.FactValueMap{}
+	return result, nil
 }
-func gatherNoteVerify(commandOutput string) (entities.FactValue, *entities.FactGatheringError) {
-	// profit?
+func gatherNoteVerify(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
+	result := &entities.FactValueMap{}
+	return result, nil
 }
-func gatherNoteList(commandOutput string) (entities.FactValue, *entities.FactGatheringError) {
-	// profit?
+func gatherNoteList(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
+	result := &entities.FactValueMap{}
+	return result, nil
 }
