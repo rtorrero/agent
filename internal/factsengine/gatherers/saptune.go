@@ -1,6 +1,7 @@
 package gatherers
 
 import (
+	"encoding/json"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -106,6 +107,17 @@ func NewSaptuneGatherer(executor utils.CommandExecutor) *SaptuneGatherer {
 	}
 }
 
+func parseJSONToFactValue(jsonStr string) (entities.FactValue, error) {
+	// Unmarshal the JSON into an interface{} type.
+	var jsonData interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &jsonData); err != nil {
+		return nil, err
+	}
+
+	// Convert the parsed jsonData into a FactValue using NewFactValue.
+	return entities.NewFactValueMod(jsonData)
+}
+
 func (s *SaptuneGatherer) Gather(factsRequests []entities.FactRequest) ([]entities.Fact, error) {
 	facts := []entities.Fact{}
 	log.Infof("Starting %s facts gathering process", SaptuneGathererName)
@@ -151,12 +163,14 @@ func handleArgument(
 }
 
 func gatherStatus(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
-	// var data SaptuneOutput
-	//_ := json.Unmarshal(commandOutput, &data)
+	status, err := parseJSONToFactValue(string(commandOutput))
+	if err != nil {
+		gatheringError := SaptuneCommandError.Wrap(err.Error())
+		log.Error(gatheringError)
+		return nil, gatheringError
+	}
 
-	//TODO
-	result := &entities.FactValueMap{}
-	return result, nil
+	return status, nil
 }
 
 func gatherSolutionVerify(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {

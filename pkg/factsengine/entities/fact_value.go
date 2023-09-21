@@ -58,6 +58,60 @@ func NewFactValue(factInterface interface{}) (FactValue, error) {
 	}
 }
 
+func NewFactValueMod(factInterface interface{}) (FactValue, error) {
+	switch v := factInterface.(type) {
+	case []interface{}:
+		newList := []FactValue{}
+		for _, value := range v {
+			newValue, err := NewFactValueMod(value)
+			if err != nil {
+				return nil, err
+			}
+			newList = append(newList, newValue)
+		}
+		return &FactValueList{Value: newList}, nil
+	case map[string]interface{}:
+		newMap := make(map[string]FactValue)
+		for key, mapValue := range v {
+			newValue, err := NewFactValueMod(mapValue)
+			if err != nil {
+				return nil, err
+			}
+			newMap[key] = newValue
+		}
+		return &FactValueMap{Value: newMap}, nil
+	case bool:
+		return &FactValueBool{Value: v}, nil
+	case int:
+		return &FactValueInt{Value: int(v)}, nil
+	case int32:
+		return &FactValueInt{Value: int(v)}, nil
+	case int64:
+		return &FactValueInt{Value: int(v)}, nil
+	case uint:
+		return &FactValueInt{Value: int(v)}, nil
+	case uint32:
+		return &FactValueInt{Value: int(v)}, nil
+	case uint64:
+		if v <= uint64(math.MaxInt64) {
+			return &FactValueInt{Value: int(v)}, nil
+		} else {
+			return &FactValueString{Value: fmt.Sprintf("%d", v)}, nil
+		}
+	case float32:
+		return &FactValueFloat{Value: float64(v)}, nil
+	case float64:
+		if math.Floor(v) == v {
+			return &FactValueInt{Value: int(v)}, nil
+		}
+		return &FactValueFloat{Value: v}, nil
+	case string:
+		return &FactValueString{Value: v}, nil
+	default:
+		return nil, fmt.Errorf("invalid type: %T for value: %v", v, factInterface)
+	}
+}
+
 type FactValueInt struct {
 	Value int
 }
