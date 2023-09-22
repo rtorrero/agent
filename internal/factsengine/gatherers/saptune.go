@@ -15,12 +15,12 @@ const (
 )
 
 // nolint:gochecknoglobals
-var whitelistedArguments = map[string]func([]byte) (entities.FactValue, *entities.FactGatheringError){
-	"status --non-compliance-check":          gatherStatus,
-	"solution-verify": gatherSolutionVerify,
-	"solution-list":   gatherSolutionList,
-	"note-verify":     gatherNoteVerify,
-	"note-list":       gatherNoteList,
+var whitelistedArguments = map[string]string{
+	"status":          "status --non-compliance-check",
+	"solution-verify": "solution verify",
+	"solution-list":   "solution list",
+	"note-verify":     "note verify",
+	"note-list":       "note list",
 }
 
 // nolint:gochecknoglobals
@@ -46,52 +46,6 @@ var (
 	}
 
 )
-
-type SaptuneOutput struct {
-	Schema      string    `json:"$schema"`
-	PublishTime string    `json:"publish time"`
-	Argv        string    `json:"argv"`
-	Pid         int       `json:"pid"`
-	Command     string    `json:"command"`
-	ExitCode    int       `json:"exit code"`
-	Result      Result    `json:"result"`
-	Messages    []Message `json:"messages"`
-}
-
-type Result struct {
-	Services                 Services `json:"services"`
-	SystemdSystemState       string   `json:"systemd system state"`
-	TuningState              string   `json:"tuning state"`
-	Virtualization           string   `json:"virtualization"`
-	ConfiguredVersion        string   `json:"configured version"`
-	PackageVersion           string   `json:"package version"`
-	SolutionEnabled          []string `json:"Solution enabled"`
-	NotesEnabledBySolution   []string `json:"Notes enabled by Solution"`
-	SolutionApplied          []string `json:"Solution applied"`
-	NotesAppliedBySolution   []string `json:"Notes applied by Solution"`
-	NotesEnabledAdditionally []string `json:"Notes enabled additionally"`
-	NotesEnabled             []string `json:"Notes enabled"`
-	NotesApplied             []string `json:"Notes applied"`
-	Staging                  Staging  `json:"staging"`
-	RememberMessage          string   `json:"remember message"`
-}
-
-type Services struct {
-	Saptune []string `json:"saptune"`
-	Sapconf []string `json:"sapconf"`
-	Tuned   []string `json:"tuned"`
-}
-
-type Staging struct {
-	StagingEnabled  bool     `json:"staging enabled"`
-	NotesStaged     []string `json:"Notes staged"`
-	SolutionsStaged []string `json:"Solutions staged"`
-}
-
-type Message struct {
-	Priority string `json:"priority"`
-	Message  string `json:"message"`
-}
 
 type SaptuneGatherer struct {
 	executor utils.CommandExecutor
@@ -121,7 +75,7 @@ func parseJSONToFactValue(jsonStr string) (entities.FactValue, error) {
 func (s *SaptuneGatherer) Gather(factsRequests []entities.FactRequest) ([]entities.Fact, error) {
 	facts := []entities.Fact{}
 	log.Infof("Starting %s facts gathering process", SaptuneGathererName)
-	saptuneRetriever, _ := saptune.NewSaptune(utils.Executor{})
+	saptuneRetriever, _ := saptune.NewSaptune(s.executor)
 	for _, factReq := range factsRequests {
 			var fact entities.Fact
 		if len(factReq.Argument) == 0 {
@@ -143,15 +97,15 @@ func handleArgument(
 	saptuneRetriever *saptune.Saptune,
 	argument string,
 ) (entities.FactValue, *entities.FactGatheringError) { 
-	argumentHandler, ok := whitelistedArguments[argument]
+	internalArguments, ok := whitelistedArguments[argument]
 
 	if !ok {
-		gatheringError := SaptuneUnknownArgument.Wrap(argument)
+		gatheringError := SaptuneUnknownArgument.Wrap(internalArguments)
 		log.Error(gatheringError)
 		return nil, gatheringError
 	}
 
-	argList := strings.Split(argument, " ")
+	argList := strings.Split(internalArguments, " ")
 	saptuneOutput, commandError := saptuneRetriever.RunCommandJSON(argList...)
 	if commandError != nil {
 		gatheringError := SaptuneCommandError.Wrap(commandError.Error())
@@ -159,10 +113,10 @@ func handleArgument(
 		return nil, gatheringError
 	}
 
-	return argumentHandler(saptuneOutput)
+	return gatherFactsFromOutput(saptuneOutput)
 }
 
-func gatherStatus(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
+func gatherFactsFromOutput(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
 	status, err := parseJSONToFactValue(string(commandOutput))
 	if err != nil {
 		gatheringError := SaptuneCommandError.Wrap(err.Error())
@@ -171,21 +125,4 @@ func gatherStatus(commandOutput []byte) (entities.FactValue, *entities.FactGathe
 	}
 
 	return status, nil
-}
-
-func gatherSolutionVerify(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
-	result := &entities.FactValueMap{}
-	return result, nil
-}
-func gatherSolutionList(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
-	result := &entities.FactValueMap{}
-	return result, nil
-}
-func gatherNoteVerify(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
-	result := &entities.FactValueMap{}
-	return result, nil
-}
-func gatherNoteList(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
-	result := &entities.FactValueMap{}
-	return result, nil
 }
