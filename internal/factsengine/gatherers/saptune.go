@@ -2,7 +2,6 @@ package gatherers
 
 import (
 	"encoding/json"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/trento-project/agent/internal/core/saptune"
@@ -15,12 +14,12 @@ const (
 )
 
 // nolint:gochecknoglobals
-var whitelistedArguments = map[string]string{
-	"status":          "status --non-compliance-check",
-	"solution-verify": "solution verify",
-	"solution-list":   "solution list",
-	"note-verify":     "note verify",
-	"note-list":       "note list",
+var whitelistedArguments = map[string][]string{
+	"status":          {"status", "--non-compliance-check"},
+	"solution-verify": {"solution", "verify"},
+	"solution-list":   {"solution", "list"},
+	"note-verify":     {"note", "verify"},
+	"note-list":       {"note", "list"},
 }
 
 // nolint:gochecknoglobals
@@ -44,7 +43,6 @@ var (
 		Type:    "saptune-cmd-error",
 		Message: "error executing saptune command",
 	}
-
 )
 
 type SaptuneGatherer struct {
@@ -61,7 +59,7 @@ func NewSaptuneGatherer(executor utils.CommandExecutor) *SaptuneGatherer {
 	}
 }
 
-func parseJSONToFactValue(jsonStr string) (entities.FactValue, error) {
+func parseJSONToFactValue(jsonStr json.RawMessage) (entities.FactValue, error) {
 	// Unmarshal the JSON into an interface{} type.
 	var jsonData interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &jsonData); err != nil {
@@ -77,14 +75,31 @@ func (s *SaptuneGatherer) Gather(factsRequests []entities.FactRequest) ([]entiti
 	log.Infof("Starting %s facts gathering process", SaptuneGathererName)
 	saptuneRetriever, _ := saptune.NewSaptune(s.executor)
 	for _, factReq := range factsRequests {
-			var fact entities.Fact
-		if len(factReq.Argument) == 0 {
+		var fact entities.Fact
+
+		internalArguments, ok := whitelistedArguments[factReq.Argument]
+
+		switch {
+		case len(internalArguments) > 0 && !ok:
+			gatheringError := SaptuneUnknownArgument.Wrap(factReq.Argument)
+			log.Error(gatheringError)
+			fact = entities.NewFactGatheredWithError(factReq, gatheringError)
+
+		case !saptuneRetriever.IsJSONSupported:
+			log.Error(SaptuneVersionUnsupported.Message)
+			fact = entities.NewFactGatheredWithError(factReq, &SaptuneVersionUnsupported)
+
+		case len(internalArguments) == 0:
 			log.Error(SaptuneMissingArgument.Message)
 			fact = entities.NewFactGatheredWithError(factReq, &SaptuneMissingArgument)
-		} else if factValue, err := handleArgument(&saptuneRetriever, factReq.Argument); err != nil {
-			fact = entities.NewFactGatheredWithError(factReq, err)
-		} else {
-			fact = entities.NewFactGatheredWithRequest(factReq, factValue)
+
+		default:
+			factValue, err := handleArgument(&saptuneRetriever, internalArguments)
+			if err != nil {
+				fact = entities.NewFactGatheredWithError(factReq, err)
+			} else {
+				fact = entities.NewFactGatheredWithRequest(factReq, factValue)
+			}
 		}
 		facts = append(facts, fact)
 	}
@@ -95,29 +110,17 @@ func (s *SaptuneGatherer) Gather(factsRequests []entities.FactRequest) ([]entiti
 
 func handleArgument(
 	saptuneRetriever *saptune.Saptune,
-	argument string,
-) (entities.FactValue, *entities.FactGatheringError) { 
-	internalArguments, ok := whitelistedArguments[argument]
+	arguments []string,
+) (entities.FactValue, *entities.FactGatheringError) {
 
-	if !ok {
-		gatheringError := SaptuneUnknownArgument.Wrap(internalArguments)
-		log.Error(gatheringError)
-		return nil, gatheringError
-	}
-
-	argList := strings.Split(internalArguments, " ")
-	saptuneOutput, commandError := saptuneRetriever.RunCommandJSON(argList...)
+	saptuneOutput, commandError := saptuneRetriever.RunCommandJSON(arguments...)
 	if commandError != nil {
 		gatheringError := SaptuneCommandError.Wrap(commandError.Error())
 		log.Error(gatheringError)
 		return nil, gatheringError
 	}
 
-	return gatherFactsFromOutput(saptuneOutput)
-}
-
-func gatherFactsFromOutput(commandOutput []byte) (entities.FactValue, *entities.FactGatheringError) {
-	status, err := parseJSONToFactValue(string(commandOutput))
+	status, err := parseJSONToFactValue(saptuneOutput)
 	if err != nil {
 		gatheringError := SaptuneCommandError.Wrap(err.Error())
 		log.Error(gatheringError)

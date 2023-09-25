@@ -46,15 +46,15 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererStatus() {
 
 	expectedResults := []entities.Fact{
 		{
-			Name:  "saptune_status",
+			Name: "saptune_status",
 			Value: &entities.FactValueMap{
 				Value: map[string]entities.FactValue{
-					"$schema": &entities.FactValueString{Value: "file:///usr/share/saptune/schemas/1.0/saptune_status.schema.json"},
+					"$schema":      &entities.FactValueString{Value: "file:///usr/share/saptune/schemas/1.0/saptune_status.schema.json"},
 					"publish time": &entities.FactValueString{Value: "2023-09-15 15:15:14.599"},
-					"argv": &entities.FactValueString{Value: "saptune --format json status"},
-					"pid": &entities.FactValueInt{Value: 6593},
-					"command": &entities.FactValueString{Value: "status"},
-					"exit code": &entities.FactValueInt{Value: 1},
+					"argv":         &entities.FactValueString{Value: "saptune --format json status"},
+					"pid":          &entities.FactValueInt{Value: 6593},
+					"command":      &entities.FactValueString{Value: "status"},
+					"exit code":    &entities.FactValueInt{Value: 1},
 					"result": &entities.FactValueMap{
 						Value: map[string]entities.FactValue{
 							"services": &entities.FactValueMap{
@@ -66,17 +66,17 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererStatus() {
 										},
 									},
 									"sapconf": &entities.FactValueList{Value: []entities.FactValue{}},
-									"tuned": &entities.FactValueList{Value: []entities.FactValue{}},
+									"tuned":   &entities.FactValueList{Value: []entities.FactValue{}},
 								},
 							},
-							"systemd system state": &entities.FactValueString{Value: "degraded"},
-							"tuning state": &entities.FactValueString{Value: "compliant"},
-							"virtualization": &entities.FactValueString{Value: "kvm"},
-							"configured version": &entities.FactValueString{Value: "3"},
-							"package version": &entities.FactValueString{Value: "3.1.0"},
-							"Solution enabled": &entities.FactValueList{Value: []entities.FactValue{}},
+							"systemd system state":      &entities.FactValueString{Value: "degraded"},
+							"tuning state":              &entities.FactValueString{Value: "compliant"},
+							"virtualization":            &entities.FactValueString{Value: "kvm"},
+							"configured version":        &entities.FactValueString{Value: "3"},
+							"package version":           &entities.FactValueString{Value: "3.1.0"},
+							"Solution enabled":          &entities.FactValueList{Value: []entities.FactValue{}},
 							"Notes enabled by Solution": &entities.FactValueList{Value: []entities.FactValue{}},
-							"Solution applied": &entities.FactValueList{Value: []entities.FactValue{}},
+							"Solution applied":          &entities.FactValueList{Value: []entities.FactValue{}},
 							"Notes applied by Solution": &entities.FactValueList{Value: []entities.FactValue{}},
 							"Notes enabled additionally": &entities.FactValueList{
 								Value: []entities.FactValue{
@@ -95,8 +95,8 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererStatus() {
 							},
 							"staging": &entities.FactValueMap{
 								Value: map[string]entities.FactValue{
-									"staging enabled": &entities.FactValueBool{Value: false},
-									"Notes staged": &entities.FactValueList{Value: []entities.FactValue{}},
+									"staging enabled":  &entities.FactValueBool{Value: false},
+									"Notes staged":     &entities.FactValueList{Value: []entities.FactValue{}},
 									"Solutions staged": &entities.FactValueList{Value: []entities.FactValue{}},
 								},
 							},
@@ -108,7 +108,7 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererStatus() {
 							&entities.FactValueMap{
 								Value: map[string]entities.FactValue{
 									"priority": &entities.FactValueString{Value: "NOTICE"},
-									"message": &entities.FactValueString{Value: "actions.go:85: ATTENTION: You are running a test version (3.1.0 from 2023/08/03) of saptune which is not supported for production use\n"},
+									"message":  &entities.FactValueString{Value: "actions.go:85: ATTENTION: You are running a test version (3.1.0 from 2023/08/03) of saptune which is not supported for production use\n"},
 								},
 							},
 						},
@@ -143,7 +143,7 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererNoteVerify() {
 
 	expectedResults := []entities.Fact{
 		{
-			Name:  "saptune_note_verify",
+			Name: "saptune_note_verify",
 			Value: &entities.FactValueMap{
 				Value: map[string]entities.FactValue{
 					"$schema": &entities.FactValueString{
@@ -282,7 +282,7 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererNoteVerify() {
 												Value: []entities.FactValue{
 													&entities.FactValueMap{
 														Value: map[string]entities.FactValue{
-															"index": &entities.FactValueInt{Value: 3},
+															"index":     &entities.FactValueInt{Value: 3},
 															"amendment": &entities.FactValueString{Value: " [3] value is only checked, but NOT set"},
 														},
 													},
@@ -302,12 +302,12 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererNoteVerify() {
 												Value: []entities.FactValue{
 													&entities.FactValueMap{
 														Value: map[string]entities.FactValue{
-															"index": &entities.FactValueInt{Value: 3},
+															"index":     &entities.FactValueInt{Value: 3},
 															"amendment": &entities.FactValueString{Value: " [3] value is only checked, but NOT set"},
 														},
 													},
 												},
-											},											
+											},
 										},
 									},
 									&entities.FactValueMap{
@@ -401,12 +401,12 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererNoteVerify() {
 												Value: []entities.FactValue{
 													&entities.FactValueMap{
 														Value: map[string]entities.FactValue{
-															"index": &entities.FactValueInt{Value: 15},
+															"index":     &entities.FactValueInt{Value: 15},
 															"amendment": &entities.FactValueString{Value: "[15] the parameter is only used to calculate the size of tmpfs (/dev/shm)"},
 														},
 													},
 												},
-											},												
+											},
 										},
 									},
 									&entities.FactValueMap{
@@ -421,12 +421,12 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererNoteVerify() {
 												Value: []entities.FactValue{
 													&entities.FactValueMap{
 														Value: map[string]entities.FactValue{
-															"index": &entities.FactValueInt{Value: 11},
+															"index":     &entities.FactValueInt{Value: 11},
 															"amendment": &entities.FactValueString{Value: "[11] parameter is additional defined in sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0x0fffffffffffff00), /boot/sysctl.conf-5.3.18-150300.59.93-default(0x0fffffffffffff00)"},
 														},
 													},
 												},
-											},											
+											},
 										},
 									},
 									&entities.FactValueMap{
@@ -441,12 +441,12 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererNoteVerify() {
 												Value: []entities.FactValue{
 													&entities.FactValueMap{
 														Value: map[string]entities.FactValue{
-															"index": &entities.FactValueInt{Value: 11},
+															"index":     &entities.FactValueInt{Value: 11},
 															"amendment": &entities.FactValueString{Value: "[11] parameter is additional defined in sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0x0fffffffffffff00), /boot/sysctl.conf-5.3.18-150300.59.93-default(0x0fffffffffffff00)\n [11] parameter is additional defined in sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0xffffffffffffffff), /boot/sysctl.conf-5.3.18-150300.59.93-default(0xffffffffffffffff)"},
 														},
 													},
 												},
-											},											
+											},
 										},
 									},
 									// ... represent other verifications similarly.
@@ -475,33 +475,33 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererNoteVerify() {
 							&entities.FactValueMap{
 								Value: map[string]entities.FactValue{
 									"priority": &entities.FactValueString{Value: "NOTICE"},
-									"message": &entities.FactValueString{Value: "actions.go:85: ATTENTION: You are running a test version (3.1.0 from 2022/11/28) of saptune which is not supported for production use\n"},
+									"message":  &entities.FactValueString{Value: "actions.go:85: ATTENTION: You are running a test version (3.1.0 from 2022/11/28) of saptune which is not supported for production use\n"},
 								},
 							},
 							&entities.FactValueMap{
 								Value: map[string]entities.FactValue{
 									"priority": &entities.FactValueString{Value: "WARNING"},
-									"message": &entities.FactValueString{Value: "sysctl.go:73: Parameter 'kernel.shmmax' additional defined in the following sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0xffffffffffffffff), /boot/sysctl.conf-5.3.18-150300.59.93-default(0xffffffffffffffff).\n"},
+									"message":  &entities.FactValueString{Value: "sysctl.go:73: Parameter 'kernel.shmmax' additional defined in the following sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0xffffffffffffffff), /boot/sysctl.conf-5.3.18-150300.59.93-default(0xffffffffffffffff).\n"},
 								},
 							},
 							&entities.FactValueMap{
 								Value: map[string]entities.FactValue{
 									"priority": &entities.FactValueString{Value: "WARNING"},
-									"message": &entities.FactValueString{Value: "sysctl.go:73: Parameter 'kernel.shmall' additional defined in the following sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0x0fffffffffffff00), /boot/sysctl.conf-5.3.18-150300.59.93-default(0x0fffffffffffff00).\n"},
+									"message":  &entities.FactValueString{Value: "sysctl.go:73: Parameter 'kernel.shmall' additional defined in the following sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0x0fffffffffffff00), /boot/sysctl.conf-5.3.18-150300.59.93-default(0x0fffffffffffff00).\n"},
 								},
 							},
 							&entities.FactValueMap{
 								Value: map[string]entities.FactValue{
 									"priority": &entities.FactValueString{Value: "NOTICE"},
-									"message": &entities.FactValueString{Value: "ini.go:308: block device related section settings detected: Traversing all block devices can take a considerable amount of time.\n"},
+									"message":  &entities.FactValueString{Value: "ini.go:308: block device related section settings detected: Traversing all block devices can take a considerable amount of time.\n"},
 								},
 							},
 							&entities.FactValueMap{
 								Value: map[string]entities.FactValue{
 									"priority": &entities.FactValueString{Value: "ERROR"},
-									"message": &entities.FactValueString{Value: "system.go:148: The parameters listed above have deviated from SAP/SUSE recommendations.\n\n"},
+									"message":  &entities.FactValueString{Value: "system.go:148: The parameters listed above have deviated from SAP/SUSE recommendations.\n\n"},
 								},
-							},																												
+							},
 						},
 					},
 				},
@@ -514,6 +514,9 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererNoteVerify() {
 }
 
 func (suite *SaptuneTestSuite) TestSaptuneNoArgumentProvided() {
+	suite.mockExecutor.On("Exec", "rpm", "-q", "--qf", "%{VERSION}", "saptune").Return(
+		[]byte("3.1.0"), nil,
+	)
 	c := gatherers.NewSaptuneGatherer(suite.mockExecutor)
 
 	factRequests := []entities.FactRequest{
