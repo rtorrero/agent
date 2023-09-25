@@ -2,6 +2,7 @@ package gatherers
 
 import (
 	"encoding/json"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/trento-project/agent/internal/core/saptune"
@@ -44,6 +45,13 @@ var (
 		Message: "error executing saptune command",
 	}
 )
+
+type CachedFactValue struct {
+	factValue    entities.FactValue
+	factValueErr *entities.FactGatheringError
+}
+
+var cachedOutput = make(map[string]CachedFactValue)
 
 type SaptuneGatherer struct {
 	executor utils.CommandExecutor
@@ -112,20 +120,36 @@ func handleArgument(
 	saptuneRetriever *saptune.Saptune,
 	arguments []string,
 ) (entities.FactValue, *entities.FactGatheringError) {
+	cacheKey := strings.Join(arguments, "-")
+	if item, found := cachedOutput[cacheKey]; found {
+		log.Info("Using cached fact value")
+		return item.factValue, item.factValueErr
+	}
 
 	saptuneOutput, commandError := saptuneRetriever.RunCommandJSON(arguments...)
 	if commandError != nil {
 		gatheringError := SaptuneCommandError.Wrap(commandError.Error())
 		log.Error(gatheringError)
+		updateCachedFactValue(nil, gatheringError, cacheKey)
 		return nil, gatheringError
 	}
 
-	status, err := parseJSONToFactValue(saptuneOutput)
+	fv, err := parseJSONToFactValue(saptuneOutput)
 	if err != nil {
 		gatheringError := SaptuneCommandError.Wrap(err.Error())
 		log.Error(gatheringError)
+		updateCachedFactValue(nil, gatheringError, cacheKey)
 		return nil, gatheringError
 	}
 
-	return status, nil
+	updateCachedFactValue(fv, nil, cacheKey)
+	return fv, nil
+}
+
+func updateCachedFactValue(factValue entities.FactValue, factValueErr *entities.FactGatheringError, key string) {
+	log.Info("Updating cached fact value")
+	cachedOutput[key] = CachedFactValue{
+		factValue:    factValue,
+		factValueErr: factValueErr,
+	}
 }

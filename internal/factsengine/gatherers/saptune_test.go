@@ -513,7 +513,7 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererNoteVerify() {
 	suite.ElementsMatch(expectedResults, factResults)
 }
 
-func (suite *SaptuneTestSuite) TestSaptuneNoArgumentProvided() {
+func (suite *SaptuneTestSuite) TestSaptuneGathererNoArgumentProvided() {
 	suite.mockExecutor.On("Exec", "rpm", "-q", "--qf", "%{VERSION}", "saptune").Return(
 		[]byte("3.1.0"), nil,
 	)
@@ -554,4 +554,51 @@ func (suite *SaptuneTestSuite) TestSaptuneNoArgumentProvided() {
 
 	suite.NoError(err)
 	suite.ElementsMatch(expectedResults, factResults)
+}
+
+func (suite *SaptuneTestSuite) TestSaptuneGathererCommandCaching() {
+	suite.mockExecutor.On("Exec", "rpm", "-q", "--qf", "%{VERSION}", "saptune").Return(
+		[]byte("3.1.0"), nil,
+	)
+	suite.mockExecutor.On("Exec", "saptune", "--format", "json", "status", "--non-compliance-check").Return([]byte("{\"some_json_key\": \"some_value\"}"), nil)
+	c := gatherers.NewSaptuneGatherer(suite.mockExecutor)
+
+	factRequests := []entities.FactRequest{
+		{
+			Name:     "saptune_repeated_argument_1",
+			Gatherer: "saptune",
+			Argument: "status",
+		},
+		{
+			Name:     "saptune_repeated_argument_2",
+			Gatherer: "saptune",
+			Argument: "status",
+		},
+	}
+
+	factResults, err := c.Gather(factRequests)
+
+	expectedResults := []entities.Fact{
+		{
+			Name: "saptune_repeated_argument_1",
+			Value: &entities.FactValueMap{
+				Value: map[string]entities.FactValue{
+					"some_json_key": &entities.FactValueString{Value: "some_value"},
+				},
+			},
+		},
+		{
+			Name: "saptune_repeated_argument_2",
+			Value: &entities.FactValueMap{
+				Value: map[string]entities.FactValue{
+					"some_json_key": &entities.FactValueString{Value: "some_value"},
+				},
+			},
+		},
+	}
+
+	suite.NoError(err)
+	suite.ElementsMatch(expectedResults, factResults)
+	suite.mockExecutor.AssertNumberOfCalls(suite.T(), "Exec", 2) // 1 for rpm, 1 for saptune
+
 }
