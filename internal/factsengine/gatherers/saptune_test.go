@@ -513,6 +513,88 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererNoteVerify() {
 	suite.ElementsMatch(expectedResults, factResults)
 }
 
+func (suite *SaptuneTestSuite) TestSaptuneGathererSolutionVerify() {
+	mockOutputFile, _ := os.Open(helpers.GetFixturePath("gatherers/saptune-solution-verify.output"))
+	mockOutput, _ := io.ReadAll(mockOutputFile)
+	suite.mockExecutor.On("Exec", "saptune", "--format", "json", "solution", "verify").Return(mockOutput, nil)
+	suite.mockExecutor.On("Exec", "rpm", "-q", "--qf", "%{VERSION}", "saptune").Return(
+		[]byte("3.1.0"), nil,
+	)
+	c := gatherers.NewSaptuneGatherer(suite.mockExecutor)
+
+	factRequests := []entities.FactRequest{
+		{
+			Name:     "saptune_solution_verify",
+			Gatherer: "saptune",
+			Argument: "solution-verify",
+		},
+	}
+
+	factResults, err := c.Gather(factRequests)
+
+	expectedResults := []entities.Fact{
+		{
+			Name:  "saptune_solution_verify",
+			Value: &entities.FactValueMap{
+				Value: map[string]entities.FactValue{
+					"$schema": &entities.FactValueString{Value: "file:///usr/share/saptune/schemas/1.0/saptune_solution_verify.schema.json"},
+					"publish time": &entities.FactValueString{Value: "2023-04-27 17:17:23.743"},
+					"argv": &entities.FactValueString{Value: "saptune --format json solution verify"},
+					"pid": &entities.FactValueInt{Value: 2538},
+					"command": &entities.FactValueString{Value: "solution verify"},
+					"exit code": &entities.FactValueInt{Value: 1},
+					"result": &entities.FactValueMap{
+						Value: map[string]entities.FactValue{
+							"verifications": &entities.FactValueList{
+								Value: []entities.FactValue{
+									&entities.FactValueMap{
+										Value: map[string]entities.FactValue{
+											"Note ID": &entities.FactValueString{Value: "1771258"},
+											"Description": &entities.FactValueString{Value: "The verified note has a higher version than the applied one"},
+											"Solution": &entities.FactValueString{Value: "Please check and update your saptune package"},
+											"Note enabled": &entities.FactValueBool{Value: true},
+											"Note applied": &entities.FactValueBool{Value: false},
+											"Affected parameters": &entities.FactValueMap{
+												Value: map[string]entities.FactValue{
+													"fs.aio-max-nr": &entities.FactValueString{Value: "Applied: 3145728, Expected: 6291456"},
+													"fs.file-max": &entities.FactValueString{Value: "Applied: 12000512, Expected: 1048576"},
+												},
+											},
+										},
+									},
+								},
+							},
+							"attentions": &entities.FactValueList{
+								Value: []entities.FactValue{},
+							},
+							"Notes enabled": &entities.FactValueList{
+								Value: []entities.FactValue{
+									&entities.FactValueString{Value: "941735"},
+									&entities.FactValueString{Value: "1771258"},
+								},
+							},
+							"system compliance": &entities.FactValueBool{Value: false},
+						},
+					},
+					"messages": &entities.FactValueList{
+						Value: []entities.FactValue{
+							&entities.FactValueMap{
+								Value: map[string]entities.FactValue{
+									"priority": &entities.FactValueString{Value: "NOTICE"},
+									"message": &entities.FactValueString{Value: "actions.go:85: ATTENTION: ..."},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	suite.NoError(err)
+	suite.ElementsMatch(expectedResults, factResults)
+}
+
 func (suite *SaptuneTestSuite) TestSaptuneGathererNoArgumentProvided() {
 	suite.mockExecutor.On("Exec", "rpm", "-q", "--qf", "%{VERSION}", "saptune").Return(
 		[]byte("3.1.0"), nil,
@@ -600,5 +682,4 @@ func (suite *SaptuneTestSuite) TestSaptuneGathererCommandCaching() {
 	suite.NoError(err)
 	suite.ElementsMatch(expectedResults, factResults)
 	suite.mockExecutor.AssertNumberOfCalls(suite.T(), "Exec", 2) // 1 for rpm, 1 for saptune
-
 }
