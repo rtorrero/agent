@@ -17,6 +17,7 @@ import (
 type SapLocalhostResolverTestSuite struct {
 	suite.Suite
 	mockResolver *utilsMocks.HostnameResolver
+	mockPinger   *utilsMocks.HostPinger
 }
 
 func TestSapLocalhostResolverTestSuite(t *testing.T) {
@@ -25,6 +26,7 @@ func TestSapLocalhostResolverTestSuite(t *testing.T) {
 
 func (suite *SapLocalhostResolverTestSuite) SetupTest() {
 	suite.mockResolver = new(utilsMocks.HostnameResolver)
+	suite.mockPinger = new(utilsMocks.HostPinger)
 }
 
 func (suite *SapLocalhostResolverTestSuite) TestSapLocalhostResolverSuccess() {

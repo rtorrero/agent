@@ -54,20 +54,22 @@ var (
 type SapLocalhostResolverGatherer struct {
 	fs afero.Fs
 	hr utils.HostnameResolver
+	hp utils.HostPinger
 }
 
 type ResolvabilityDetails struct {
 	Hostname     string   `json:"hostname"`
 	Addresses    []string `json:"addresses"`
 	InstanceName string   `json:"instance_name"`
+	Reachability bool     `json:"reachability"`
 }
 
 func NewDefaultSapLocalhostResolverGatherer() *SapLocalhostResolverGatherer {
-	return NewSapLocalhostResolver(afero.NewOsFs(), utils.Resolver{})
+	return NewSapLocalhostResolver(afero.NewOsFs(), utils.Resolver{}, utils.Pinger{})
 }
 
-func NewSapLocalhostResolver(fs afero.Fs, hr utils.HostnameResolver) *SapLocalhostResolverGatherer {
-	return &SapLocalhostResolverGatherer{fs: fs, hr: hr}
+func NewSapLocalhostResolver(fs afero.Fs, hr utils.HostnameResolver, hp utils.HostPinger) *SapLocalhostResolverGatherer {
+	return &SapLocalhostResolverGatherer{fs: fs, hr: hr, hp: hp}
 }
 
 func (r *SapLocalhostResolverGatherer) Gather(factsRequests []entities.FactRequest) ([]entities.Fact, error) {
@@ -126,6 +128,7 @@ func (r *SapLocalhostResolverGatherer) getInstanceHostnameDetails() (map[string]
 				Hostname:     match[3],
 				Addresses:    addresses,
 				InstanceName: match[2],
+				Reachability: r.hp.Ping(match[3]),
 			}
 			if _, ok := resolvabilityDetails[match[1]]; !ok {
 				resolvabilityDetails[match[1]] = []ResolvabilityDetails{details}
